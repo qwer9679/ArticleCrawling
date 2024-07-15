@@ -5,9 +5,12 @@ import pyperclip
 import requests
 from bs4 import BeautifulSoup
 import os
-import urllib.request
 
-def trafilaPost(url):
+def trafilaPost(url : str):
+    """
+    url 에 있는 내용을 크롤링하여 html 태그를 지워\n
+    필요한 내용을 좀 더 간결하게 볼 수 있도록 하는 함수입니다.
+    """
     #변수 url에 저장되어있는 링크를 통해 기사를 가져옴(정리되어있지 않음)
     PostLink = trafilatura.fetch_url(url)
     #PostLink에 저장되어있는 데이터 중 필요한 내용을 추출(본문 기사)
@@ -15,17 +18,49 @@ def trafilaPost(url):
 
     return MainPost
 
-def SeoulPost(url):
+def SeoulTitle(url : str):
     """
-    서울교육청 보도자료의 기사 내용을 가져옵니다.
+    서울교육청 보도자료의 날짜, 기자정보 등을 반환합니다.
+    """
+    MainPost = trafilatura.fetch_url(url)
 
-    매개변수 : 
-    url(str) : 서울교육청 기사 링크
+    if MainPost:
+        #제목 앞쪽의 필요없는 부분 제거
+        MainPost = re.sub(r".*\$\(\"head title\"\)\.replaceWith\(\'\<title\>", '', MainPost, flags=re.DOTALL)
+        #제목 뒤쪽의 필요없는 부분 제거
+        MainPost = re.sub(r"ㅣ.*", '', MainPost, flags=re.DOTALL)
+
+        return MainPost
+    else:
+        print("잘못된 url입니다.")
+
+def FindReporter(url : str):
+    """
+    서울교육청 보도자료의 기자를 찾아 반환합니다.
+    """
+    MainPost = trafilatura.fetch_url(url)
+
+    if MainPost:
+        MainPost = re.sub(r".*\<div class\=\"view_tit\"\>", '', MainPost, flags=re.DOTALL)
+        MainPost = re.sub(r"\<\/p\>.*", '', MainPost, flags=re.DOTALL)
+        MainPost = re.sub(r".*\<\/strong\>", '', MainPost, flags=re.DOTALL)
+        MainPost = re.sub(r".*\<p\>", '', MainPost, flags=re.DOTALL)
+
+        return MainPost
+    else:
+        print("잘못된 url입니다.")
+
+def SeoulPost(url : str):
+    """
+    서울교육청 보도자료에서 크롤링된 내용 중\n
+    기사내용을 가져오는 함수입니다.
     """
     MainPost = trafilaPost(url)
 
     if MainPost:
-        #http라는 내용이 있을 경우 ()를 포함하여 제거
+        #기자정보 항목 제거
+        reporter = FindReporter(url)
+        MainPost = re.sub(reporter, '', MainPost, flags=re.DOTALL)
 
         #re.sub('찾으려는 문자', '대체하려는 문자', 위치)
         #ex) re.sub('abc','bca',text) -> text 변수 내 abc라는 문자를 bca로 대체
@@ -35,7 +70,7 @@ def SeoulPost(url):
         MainPost = re.sub(r'누리집\(\S+\)', '누리집', MainPost)
 
         #서울시 기사의 문장 시작에 붙는 ▢, ○ 등을 제거
-        MainPost = re.sub('[□▢○❍◯▲▸]', '', MainPost)
+        MainPost = re.sub('[□▢○❍◯〇▲△▸]', '', MainPost)
 
         #붙임 항목 포함한 뒤의 내용을 제거
         Attached = r'붙임.*|\[붙임.*'
@@ -45,36 +80,34 @@ def SeoulPost(url):
         copyright = r'\[Copyrights ⓒ 서울교육소식 \(enews\.sen\.go\.kr\) 배포시 저작자 반드시 표기\].*'
         #re.DOTALL를 통해 줄바꿈이 일어나도 뒤의 내용을 제거하도록 함
         MainPost = re.sub(copyright, '', MainPost, flags=re.DOTALL)
-        
-
-        pyperclip.copy(MainPost)
-        print("클립보드에 복사되었습니다.")
 
         return MainPost
     else:
         print("잘못된 url입니다.")
 
-def gyeonggidoTitle(url):
+def gyeonggidoTitle(url : str):
     """
-    서울교육청 보도자료의 기사 내용을 가져옵니다.
-
-    매개변수 : 
-    url(str) : 서울교육청 기사 링크
+    경기도교육청 보도자료에서 크롤링된 내용 중\n
+    제목을 가져오는 함수입니다.
     """
     Title = trafilaPost(url)
 
     if Title:
-        #제목 이전 불필요한 텍스트 제거
-        Title = re.sub(r".*?제목 \|",'', Title, flags=re.DOTALL)
-        #제목 이후 불필요한 텍스트 제거
-        Title = re.sub(r"작성자.*", '', Title, flags=re.DOTALL)
-        Title = re.sub(r"\| \|", '', Title)
-        Title = re.sub(r"\n", '', Title)
+        # #제목 이전 불필요한 텍스트 제거
+        # Title = re.sub(r".*?제목 \|",'', Title, flags=re.DOTALL)
+        # #제목 이후 불필요한 텍스트 제거
+        # Title = re.sub(r"작성자.*", '', Title, flags=re.DOTALL)
+        # Title = re.sub(r"\| \|", '', Title)
+        # Title = re.sub(r"\n", '', Title)
         return Title
     else:
         print("잘못된 url입니다.")
 
-def gyeonggidoPost(url):
+def gyeonggidoPost(url : str):
+    """
+    경기도교육청 보도자료에서 크롤링된 내용 중\n
+    기사내용을 가져오는 함수입니다.
+    """
     MainPost = trafilaPost(url)
 
     if MainPost:
@@ -91,14 +124,20 @@ def gyeonggidoPost(url):
 
         return MainPost
 
-def contain_char(string, char):
+def contain_char(string : str, char : str):
     """
-    string 문자열 내에 char가 있는지 확인합니다.
-    있을 경우 True, 없을 경우 False로 반환합니다.
+    string 문자열 내에 char가 있는지 확인합니다.\n
+    현재 코드에서는 url 내 특정 url이 있을 경우, \n
+    그에 해당하는 사이트로 판정합니다.
     """
     return char in string
 
-def savetxt(Title, MainPost):
+def savetxt(Title : str, MainPost : str):
+    """
+    기사의 본문, 제목을 txt파일로 저장합니다.\n
+    Title : 기사의 제목을 파일의 이름으로 저장합니다.\n
+    MainPost : 기사의 내용을 txt 파일에 저장합니다.
+    """
     file_path = Title + ".txt"
 
     # 파일을 쓰기 모드로 열고 문자열을 파일에 작성합니다.
@@ -107,9 +146,6 @@ def savetxt(Title, MainPost):
 
     print(f"기사내용이 {file_path}파일에 저장되었습니다.")
 
-def saveimg(url):
-    for i in range(10):
-        urllib.request.urlretrieve(url, str(i + 1) + ".jpg")
 
 if __name__ == "__main__":
 
@@ -118,9 +154,14 @@ if __name__ == "__main__":
 
     if contain_char(url, "enews.sen.go.kr"):
         #서울시 기사일 경우
+        Title = SeoulTitle(url)
         Post = SeoulPost(url)
     if contain_char(url, "www.goe.go.kr"):
         #경기도 기사일 경우
         Title = gyeonggidoTitle(url)
         Post = gyeonggidoPost(url)
-        savetxt(Title, Post)
+
+    print("제목 : " + Title)
+    print("내용 : " + Post)
+
+    savetxt(Title, Post)
