@@ -71,10 +71,9 @@ def FindReporter(url : str):
     else:
         print("잘못된 url입니다.")
 
-
 if __name__ == "__main__":
 
-    
+
     url = "https://enews.sen.go.kr/news/view.do?bbsSn=186877&step1=3&step2=1"
     
     print(FindReporter(url))
