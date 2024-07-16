@@ -93,12 +93,12 @@ def gyeonggidoTitle(url : str):
     Title = trafilaPost(url)
 
     if Title:
-        # #제목 이전 불필요한 텍스트 제거
-        # Title = re.sub(r".*?제목 \|",'', Title, flags=re.DOTALL)
-        # #제목 이후 불필요한 텍스트 제거
-        # Title = re.sub(r"작성자.*", '', Title, flags=re.DOTALL)
-        # Title = re.sub(r"\| \|", '', Title)
-        # Title = re.sub(r"\n", '', Title)
+        #제목 이전 불필요한 텍스트 제거
+        Title = re.sub(r".*?제목 \|",'', Title, flags=re.DOTALL)
+        #제목 이후 불필요한 텍스트 제거
+        Title = re.sub(r"작성자.*", '', Title, flags=re.DOTALL)
+        Title = re.sub(r"\| \|", '', Title)
+        Title = re.sub(r"\n", '', Title)
         return Title
     else:
         print("잘못된 url입니다.")
