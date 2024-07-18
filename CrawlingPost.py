@@ -1,10 +1,18 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
+
+from webdriver_manager.chrome import ChromeDriverManager
+
 import trafilatura
 from trafilatura.settings import use_config
-import re
-import pyperclip
-import requests
+
 from bs4 import BeautifulSoup
-import os
+import requests
+import pyperclip
+import time
+import re
 
 def trafilaPost(url : str):
     """
@@ -17,6 +25,7 @@ def trafilaPost(url : str):
     MainPost = trafilatura.extract(PostLink)
 
     return MainPost
+
 
 def SeoulTitle(url : str):
     """
@@ -34,7 +43,8 @@ def SeoulTitle(url : str):
     else:
         print("잘못된 url입니다.")
 
-def FindReporter(url : str):
+
+def FindSeoulReporter(url : str):
     """
     서울교육청 보도자료의 기자를 찾아 반환합니다.
     """
@@ -50,6 +60,7 @@ def FindReporter(url : str):
     else:
         print("잘못된 url입니다.")
 
+
 def SeoulPost(url : str):
     """
     서울교육청 보도자료에서 크롤링된 내용 중\n
@@ -59,7 +70,7 @@ def SeoulPost(url : str):
 
     if MainPost:
         #기자정보 항목 제거
-        reporter = FindReporter(url)
+        reporter = FindSeoulReporter(url)
         MainPost = re.sub(reporter, '', MainPost, flags=re.DOTALL)
 
         #re.sub('찾으려는 문자', '대체하려는 문자', 위치)
@@ -85,6 +96,7 @@ def SeoulPost(url : str):
     else:
         print("잘못된 url입니다.")
 
+
 def gyeonggidoTitle(url : str):
     """
     경기도교육청 보도자료에서 크롤링된 내용 중\n
@@ -102,6 +114,7 @@ def gyeonggidoTitle(url : str):
         return Title
     else:
         print("잘못된 url입니다.")
+
 
 def gyeonggidoPost(url : str):
     """
@@ -124,6 +137,28 @@ def gyeonggidoPost(url : str):
 
         return MainPost
 
+
+def IncheonPost(originpost : str, PostNumber : int):
+    """
+    인천교육청 보도자료에서 크롤링된 내용 중\n
+    기사내용을 가져오는 함수입니다.
+    """
+
+    mainPost = originpost
+
+    if mainPost:
+        prepost = ".*" + str(PostNumber) + ". "
+        pospost = str(PostNumber + 1) + ". " + ".*"
+        #제목 이전 불필요한 텍스트 제거
+        mainPost = re.sub(prepost, '', originpost, flags=re.DOTALL)
+        mainPost = re.sub(pospost,'', originpost, flags=re.DOTALL)
+
+        #제목 이후 불필요한 텍스트 제거
+        return mainPost
+    else:
+        print("잘못된 url입니다.")
+
+
 def contain_char(string : str, char : str):
     """
     string 문자열 내에 char가 있는지 확인합니다.\n
@@ -131,6 +166,47 @@ def contain_char(string : str, char : str):
     그에 해당하는 사이트로 판정합니다.
     """
     return char in string
+
+
+def OpenChrome():
+    #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
+    option = Options()
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=option)
+    #임시제어용 변수, GUI 구현 후 없어질 예정
+    Controller = 1
+
+    while Controller != "exit":
+        Controller = input("현재 창의 URL 복사(Y), 종료(exit) : ")
+        if(Controller == "Y" or Controller == "y" or Controller == "Yes" or Controller == "yes"):
+            print("추출중입니다...")
+            time.sleep(5)
+
+            url = driver.current_url
+            page_source = trafilatura.extract(driver.page_source)
+
+            if contain_char(url, "enews.sen.go.kr"):
+                #서울시 기사일 경우
+                Title = SeoulTitle(url)
+                Post = SeoulPost(url)
+            if contain_char(url, "www.goe.go.kr"):
+                #경기도 기사일 경우
+                Title = gyeonggidoTitle(url)
+                Post = gyeonggidoPost(url)
+            #if contain_char(url, "www.ice.go.kr"):
+                #인천교육청 보도자료는 아직 완성하지 않았습니다.
+                #Title = IncheonTitle(url)
+                #Post = IncheonPost(url)
+
+            if Title and Post :
+                print("제목 : " + Title)
+                
+                print("내용 : " + Post)
+
+                savePost = input("기사 저장(Y), 저장 안함(N) : ")
+                if savePost:
+                    savetxt(Title, Post)
+
 
 def savetxt(Title : str, MainPost : str):
     """
@@ -148,20 +224,4 @@ def savetxt(Title : str, MainPost : str):
 
 
 if __name__ == "__main__":
-
-    #기사 링크설정
-    url = input("링크를 입력하십시오 : ")
-
-    if contain_char(url, "enews.sen.go.kr"):
-        #서울시 기사일 경우
-        Title = SeoulTitle(url)
-        Post = SeoulPost(url)
-    if contain_char(url, "www.goe.go.kr"):
-        #경기도 기사일 경우
-        Title = gyeonggidoTitle(url)
-        Post = gyeonggidoPost(url)
-
-    print("제목 : " + Title)
-    print("내용 : " + Post)
-
-    savetxt(Title, Post)
+    OpenChrome()

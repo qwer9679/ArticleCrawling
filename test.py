@@ -22,7 +22,7 @@ def savetxt(Title : str, MainPost : str):
 
     print(f"기사내용이 {file_path}파일에 저장되었습니다.")
     
-def IncheonTitle(originpost : str, PostNumber : int):
+def IncheonPost(originpost : str, PostNumber : int):
     """
     경기도교육청 보도자료에서 크롤링된 내용 중\n
     제목을 가져오는 함수입니다.
@@ -61,7 +61,7 @@ if __name__ == "__main__":
             page_source = trafilatura.extract(driver.page_source)
             subpost = []
             for i in range(10):
-                subpost[i] = IncheonTitle(page_source, i)
+                subpost[i] = IncheonPost(page_source, i)
                 savetxt("test" + str([i]) + ".txt", subpost[i])
 
         if(Controler == "exit"):
