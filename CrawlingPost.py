@@ -1,3 +1,4 @@
+import tkinter as tk
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -8,11 +9,119 @@ from webdriver_manager.chrome import ChromeDriverManager
 import trafilatura
 from trafilatura.settings import use_config
 
+import pygetwindow
+from pywinauto import Desktop
 from bs4 import BeautifulSoup
 import requests
 import pyperclip
 import time
 import re
+
+class Chromeapp:
+    def __init__(self, root):
+        """
+        GUI 구현
+        """
+        self.root = root
+        self.driver = None
+
+        # OpenChrome()
+        self.root.title("test")
+        self.root.geometry("600x400")
+        self.root.resizable(False, False)
+
+        self.root.grid_rowconfigure(0, minsize=100)
+        self.root.grid_rowconfigure(1, weight=1)
+        self.root.grid_rowconfigure(2, weight=2)
+
+        self.root.grid_columnconfigure(0, minsize=100)
+        self.root.grid_columnconfigure(1, weight=1)
+        self.root.grid_columnconfigure(2, weight=1)
+        self.root.grid_columnconfigure(3, weight=1)
+
+        self.Incheon = tk.Button(root, text="인천", command=self.OpenIncheon)
+        self.Incheon.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+
+        self.Seoul = tk.Button(root, text="서울", command=self.OpenSeoul)
+        self.Seoul.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+
+        self.Geonggido = tk.Button(root, text="경기", command=self.OpenGeonggido)
+        self.Geonggido.grid(row=0, column=2, sticky="nsew", padx=10, pady=10)
+
+        CopyPost = tk.Button(root, text="크롬 기사 복사", command=self.CrawlingPost)
+        CopyPost.grid(row=0, column=3, sticky="nsew", padx=10, pady=10)
+
+        self.exeTitle = tk.Text(root, height=2, width=50)
+        self.exeTitle.grid(row=1,column = 0, columnspan = 3, sticky="nsew", padx=10, pady=10)
+
+        TitleCopy = tk.Button(root, text="제목 복사")
+        TitleCopy.grid(row=1, column=3, sticky="nsew", padx=10, pady=10)
+
+        self.exePost = tk.Text(root, height=16, width=40)
+        self.exePost.grid(row=2,column = 0, columnspan = 3, sticky="nsew", padx=10, pady=10)
+
+
+        PostScroll = tk.Scrollbar(root, orient="vertical", command=self.exePost.yview)
+        PostScroll.grid(row=2,column=2,columnspan=3, sticky="ns")
+
+        self.exePost.config(yscrollcommand=PostScroll.set)
+
+        PostCopy = tk.Button(root, text="내용 복사")
+        PostCopy.grid(row=2, column=3, sticky="nsew", padx=10, pady=10)
+
+        self.root.mainloop()
+
+    def OpenGeonggido(self):
+        #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
+        option = Options()
+        option.add_experimental_option("detach", True)
+        # service = Service(ChromeDriverManager().install())
+        service = Service()
+        self.driver = webdriver.Chrome(service=service, options=option)
+        url = f"https://www.goe.go.kr/home/bbs/bbsList.do?menuId=100000000000059&bbsMasterId=BBSMSTR_000000000163&menuInit=2,2,0,0,0&searchCategory=%EB%8F%84%EA%B5%90%EC%9C%A1%EC%B2%AD"
+        self.driver.get(url)
+
+    def OpenSeoul(self):
+        #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
+        option = Options()
+        option.add_experimental_option("detach", True)
+        # service = Service(ChromeDriverManager().install())
+        service = Service()
+        self.driver = webdriver.Chrome(service=service, options=option)
+        url = f"https://enews.sen.go.kr/news/list.do?step1=3&step2=1"
+        self.driver.get(url)
+
+    def OpenIncheon(self):
+        #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
+        option = Options()
+        option.add_experimental_option("detach", True)
+        # service = Service(ChromeDriverManager().install())
+        service = Service()
+        self.driver = webdriver.Chrome(service=service, options=option)
+        url = f"https://www.ice.go.kr/ice/na/ntt/selectNttList.do?mi=11620&bbsId=1519"
+        self.driver.get(url)
+    
+    def CrawlingPost(self):
+        if self.driver:
+            current_url = self.driver.current_url
+            if(contain_char(current_url, "www.goe.go.kr")):
+                print(current_url)
+                Title = gyeonggidoTitle(current_url)
+                Post = gyeonggidoPost(current_url)
+            elif(contain_char(current_url, "enews.sen.go.kr")):
+                Title = SeoulTitle(current_url)
+                Post = SeoulPost(current_url)
+            elif(contain_char(current_url, "www.ice.go.kr")):
+                page_source = trafilatura.extract(self.driver.page_source)
+                
+                Title = ""
+                Post = IncheonPost(page_source)
+
+            self.exeTitle.delete("1.0", tk.END)
+            self.exeTitle.insert(tk.END, Title)
+            self.exePost.delete("1.0", tk.END)
+            self.exePost.insert(tk.END, Post)
+
 
 def trafilaPost(url : str):
     """
@@ -23,7 +132,6 @@ def trafilaPost(url : str):
     PostLink = trafilatura.fetch_url(url)
     #PostLink에 저장되어있는 데이터 중 필요한 내용을 추출(본문 기사)
     MainPost = trafilatura.extract(PostLink)
-
     return MainPost
 
 
@@ -138,25 +246,29 @@ def gyeonggidoPost(url : str):
         return MainPost
 
 
-def IncheonPost(originpost : str, PostNumber : int):
+def IncheonPost(page_source : str):
     """
     인천교육청 보도자료에서 크롤링된 내용 중\n
     기사내용을 가져오는 함수입니다.
     """
+    subpost = []
+    for i in range(1, 10):
 
-    mainPost = originpost
+        j = i + 1
 
-    if mainPost:
-        prepost = ".*" + str(PostNumber) + ". "
-        pospost = str(PostNumber + 1) + ". " + ".*"
-        #제목 이전 불필요한 텍스트 제거
-        mainPost = re.sub(prepost, '', originpost, flags=re.DOTALL)
-        mainPost = re.sub(pospost,'', originpost, flags=re.DOTALL)
+        # 제목 이전 불필요한 텍스트 제거
+        prepost = rf".*?{i}\. "
+        mainPost = re.sub(prepost, "", page_source, flags=re.DOTALL)
+
+        # 제목 이후 불필요한 텍스트 제거
+        pospost = rf"{j}\. .*"
+        mainPost = re.sub(pospost, "", mainPost, flags=re.DOTALL)
+
+        subpost.append(mainPost)
 
         #제목 이후 불필요한 텍스트 제거
-        return mainPost
-    else:
-        print("잘못된 url입니다.")
+    return subpost[1:10]
+
 
 
 def contain_char(string : str, char : str):
@@ -166,46 +278,6 @@ def contain_char(string : str, char : str):
     그에 해당하는 사이트로 판정합니다.
     """
     return char in string
-
-
-def OpenChrome():
-    #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
-    option = Options()
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=option)
-    #임시제어용 변수, GUI 구현 후 없어질 예정
-    Controller = 1
-
-    while Controller != "exit":
-        Controller = input("현재 창의 URL 복사(Y), 종료(exit) : ")
-        if(Controller == "Y" or Controller == "y" or Controller == "Yes" or Controller == "yes"):
-            print("추출중입니다...")
-            time.sleep(5)
-
-            url = driver.current_url
-            page_source = trafilatura.extract(driver.page_source)
-
-            if contain_char(url, "enews.sen.go.kr"):
-                #서울시 기사일 경우
-                Title = SeoulTitle(url)
-                Post = SeoulPost(url)
-            if contain_char(url, "www.goe.go.kr"):
-                #경기도 기사일 경우
-                Title = gyeonggidoTitle(url)
-                Post = gyeonggidoPost(url)
-            #if contain_char(url, "www.ice.go.kr"):
-                #인천교육청 보도자료는 아직 완성하지 않았습니다.
-                #Title = IncheonTitle(url)
-                #Post = IncheonPost(url)
-
-            if Title and Post :
-                print("제목 : " + Title)
-                
-                print("내용 : " + Post)
-
-                savePost = input("기사 저장(Y), 저장 안함(N) : ")
-                if savePost:
-                    savetxt(Title, Post)
 
 
 def savetxt(Title : str, MainPost : str):
@@ -224,4 +296,5 @@ def savetxt(Title : str, MainPost : str):
 
 
 if __name__ == "__main__":
-    OpenChrome()
+    root = tk.Tk()
+    mainChrome = Chromeapp(root)
