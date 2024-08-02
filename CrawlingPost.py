@@ -54,7 +54,7 @@ class Chromeapp:
         self.exeTitle = tk.Text(root, height=2, width=50)
         self.exeTitle.grid(row=1,column = 0, columnspan = 3, sticky="nsew", padx=10, pady=10)
 
-        TitleCopy = tk.Button(root, text="제목 복사")
+        TitleCopy = tk.Button(root, text="제목 복사", command=self.CopyTitle)
         TitleCopy.grid(row=1, column=3, sticky="nsew", padx=10, pady=10)
 
         self.exePost = tk.Text(root, height=16, width=40)
@@ -66,7 +66,7 @@ class Chromeapp:
 
         self.exePost.config(yscrollcommand=PostScroll.set)
 
-        PostCopy = tk.Button(root, text="내용 복사")
+        PostCopy = tk.Button(root, text="내용 복사", command=self.CopyPost)
         PostCopy.grid(row=2, column=3, sticky="nsew", padx=10, pady=10)
 
         self.root.mainloop()
@@ -121,7 +121,19 @@ class Chromeapp:
             self.exeTitle.insert(tk.END, Title)
             self.exePost.delete("1.0", tk.END)
             self.exePost.insert(tk.END, Post)
+    
 
+    def CopyPost(self):
+        Post = self.exePost.get("1.0", tk.END).strip()
+        root.clipboard_clear()
+        root.clipboard_append(Post)
+        
+
+    def CopyTitle(self):
+        Title = self.exeTitle.get("1.0", tk.END).strip()
+        root.clipboard_clear()
+        root.clipboard_append(Title)
+        # pyperclip.copy(Title)
 
 def trafilaPost(url : str):
     """
