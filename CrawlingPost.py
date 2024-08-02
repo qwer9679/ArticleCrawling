@@ -270,7 +270,6 @@ def IncheonPost(page_source : str):
     return subpost[1:10]
 
 
-
 def contain_char(string : str, char : str):
     """
     string 문자열 내에 char가 있는지 확인합니다.\n
@@ -278,21 +277,6 @@ def contain_char(string : str, char : str):
     그에 해당하는 사이트로 판정합니다.
     """
     return char in string
-
-
-def savetxt(Title : str, MainPost : str):
-    """
-    기사의 본문, 제목을 txt파일로 저장합니다.\n
-    Title : 기사의 제목을 파일의 이름으로 저장합니다.\n
-    MainPost : 기사의 내용을 txt 파일에 저장합니다.
-    """
-    file_path = Title + ".txt"
-
-    # 파일을 쓰기 모드로 열고 문자열을 파일에 작성합니다.
-    with open(file_path, 'w', encoding='utf-8') as file:
-        file.write(MainPost)
-
-    print(f"기사내용이 {file_path}파일에 저장되었습니다.")
 
 
 if __name__ == "__main__":
