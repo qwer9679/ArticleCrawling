@@ -26,7 +26,7 @@ class Chromeapp:
         self.driver = None
 
         # OpenChrome()
-        self.root.title("test")
+        self.root.title("CrawlingPost")
         self.root.geometry("600x400")
         self.root.resizable(False, False)
 
@@ -59,7 +59,6 @@ class Chromeapp:
 
         self.exePost = tk.Text(root, height=16, width=40)
         self.exePost.grid(row=2,column = 0, columnspan = 3, sticky="nsew", padx=10, pady=10)
-
 
         PostScroll = tk.Scrollbar(root, orient="vertical", command=self.exePost.yview)
         PostScroll.grid(row=2,column=2,columnspan=3, sticky="ns")
