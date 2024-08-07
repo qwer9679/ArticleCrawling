@@ -72,31 +72,34 @@ class Chromeapp:
 
     def OpenGeonggido(self):
         #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
-        option = Options()
-        option.add_experimental_option("detach", True)
-        # service = Service(ChromeDriverManager().install())
-        service = Service()
-        self.driver = webdriver.Chrome(service=service, options=option)
+        if self.driver is None:
+            option = Options()
+            option.add_experimental_option("detach", True)
+            # service = Service(ChromeDriverManager().install())
+            service = Service()
+            self.driver = webdriver.Chrome(service=service, options=option)
         url = f"https://www.goe.go.kr/home/bbs/bbsList.do?menuId=100000000000059&bbsMasterId=BBSMSTR_000000000163&menuInit=2,2,0,0,0&searchCategory=%EB%8F%84%EA%B5%90%EC%9C%A1%EC%B2%AD"
         self.driver.get(url)
 
     def OpenSeoul(self):
         #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
-        option = Options()
-        option.add_experimental_option("detach", True)
-        # service = Service(ChromeDriverManager().install())
-        service = Service()
-        self.driver = webdriver.Chrome(service=service, options=option)
+        if self.driver is None:
+            option = Options()
+            option.add_experimental_option("detach", True)
+            # service = Service(ChromeDriverManager().install())
+            service = Service()
+            self.driver = webdriver.Chrome(service=service, options=option)
         url = f"https://enews.sen.go.kr/news/list.do?step1=3&step2=1"
         self.driver.get(url)
 
     def OpenIncheon(self):
         #webdriver_manager를 이용해 크롬 드라이버를 자동 설치/업데이트 후 실행
-        option = Options()
-        option.add_experimental_option("detach", True)
-        # service = Service(ChromeDriverManager().install())
-        service = Service()
-        self.driver = webdriver.Chrome(service=service, options=option)
+        if self.driver is None:
+            option = Options()
+            option.add_experimental_option("detach", True)
+            # service = Service(ChromeDriverManager().install())
+            service = Service()
+            self.driver = webdriver.Chrome(service=service, options=option)
         url = f"https://www.ice.go.kr/ice/na/ntt/selectNttList.do?mi=11620&bbsId=1519"
         self.driver.get(url)
     
@@ -113,8 +116,15 @@ class Chromeapp:
             elif(contain_char(current_url, "www.ice.go.kr")):
                 page_source = trafilatura.extract(self.driver.page_source)
                 
+                pattern = r'<meta property="og:title" content="(.*?)"'
+                postnumber = re.findall(pattern, self.driver.page_source, re.DOTALL)
+                pattern = r'.* 외 '
+                postnumber = re.sub(pattern, '', postnumber[0])
+                pattern = r'건.*'
+                postnumber = re.sub(pattern, '', postnumber)
+
                 Title = ""
-                Post = IncheonPost(page_source)
+                Post = IncheonPost(page_source, int(postnumber))
 
             self.exeTitle.delete("1.0", tk.END)
             self.exeTitle.insert(tk.END, Title)
@@ -254,31 +264,46 @@ def gyeonggidoPost(url : str):
         MainPost = re.sub(r'\(http\S+\)', '', MainPost)
         MainPost = re.sub(r'누리집\(\S+\)', '누리집', MainPost)
 
+        #내용 중 특수문자 제거
+        MainPost = re.sub('[□▢○❍◯〇▲△▸]', '', MainPost)
+        
         return MainPost
 
 
-def IncheonPost(page_source : str):
+def IncheonPost(page_source : str, postnumber : int):
     """
     인천교육청 보도자료에서 크롤링된 내용 중\n
     기사내용을 가져오는 함수입니다.
     """
     subpost = []
-    for i in range(1, 10):
+    Mainpost = ""
+    for i in range(postnumber + 2):
 
         j = i + 1
 
         # 제목 이전 불필요한 텍스트 제거
         prepost = rf".*?{i}\. "
-        mainPost = re.sub(prepost, "", page_source, flags=re.DOTALL)
+        tmp = re.sub(prepost, "", page_source, flags=re.DOTALL)
 
         # 제목 이후 불필요한 텍스트 제거
         pospost = rf"{j}\. .*"
-        mainPost = re.sub(pospost, "", mainPost, flags=re.DOTALL)
+        tmp = re.sub(pospost, "", tmp, flags=re.DOTALL)
 
-        subpost.append(mainPost)
+        #기사 내 URL 제거
+        tmp = re.sub(r'\(http\S+\)', '', tmp)
+        tmp = re.sub(rf'누리집\(\S+\)', '누리집', tmp)
 
+        #기사 내 전화번호 제거
+        tmp = re.sub(rf'.*?\(☎\S+\)', '', tmp)
+        
         #제목 이후 불필요한 텍스트 제거
-    return subpost[1:10]
+        tmp = re.sub('[□▢○❍◯〇▲△▸▶]', '', tmp)
+        
+        Mainpost += tmp + "\n\n"
+        print("i : ", i)
+
+        
+    return Mainpost
 
 
 def contain_char(string : str, char : str):
