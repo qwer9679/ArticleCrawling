@@ -160,8 +160,6 @@ class Chromeapp:
                     pattern = r'&nbsp;'
                     PostCount = re.sub(pattern, '', PostCount)
 
-                    print("\n\n"+PostCount+"\n\n")
-
                     Title = ""
                     Post = self.IncheonPost(page_source, int(PostCount))
                     if Post is not None:
@@ -219,8 +217,6 @@ class Chromeapp:
                 MainPost = re.sub(r".*\$\(\"head title\"\)\.replaceWith\(\'\<title\>", '', MainPost, flags=re.DOTALL)
                 #제목 뒤쪽의 필요없는 부분 제거
                 MainPost = re.sub(r"ㅣ.*", '', MainPost, flags=re.DOTALL)
-
-                print(MainPost)
                 return MainPost
             else:
                 print("잘못된 url입니다.")
