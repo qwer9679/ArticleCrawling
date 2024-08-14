@@ -12,7 +12,7 @@
 [다운로드](https://drive.google.com/file/d/1NPAzDRrzseNBeQBngzba31UXHHfrE4DP/view?usp=sharing)
 
 
-다음은 사용방법입니다.
+## 사용방법
 ![기사 크롤링 사용방법](https://github.com/user-attachments/assets/8b8564cd-ebce-4508-b9f4-60be60a6fe93)
 1. 크롬으로 인천, 서울, 경기교육청 사이트를 실행합니다.
 열린 창을 통해 크롤링하려는 사이트로 이동합니다.
