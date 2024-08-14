@@ -11,6 +11,7 @@
 ### 다운로드
 1.0.1 : exe파일 아이콘 추가
 [다운로드](https://drive.google.com/file/d/1O921wEkmPUMZPcJEzgVy5hCh4QYRVKz0/view?usp=sharing)
+
 1.0.0 : exe형식으로 생성
 
 ## 사용방법
