@@ -9,8 +9,9 @@
 현재 사용가능한 사이트는 서울, 경기, 인천교육청 보도자료입니다.
 
 ### 다운로드
-[다운로드](https://drive.google.com/file/d/1NPAzDRrzseNBeQBngzba31UXHHfrE4DP/view?usp=sharing)
-
+1.0.1 : exe파일 아이콘 추가
+[다운로드](https://drive.google.com/file/d/1O921wEkmPUMZPcJEzgVy5hCh4QYRVKz0/view?usp=sharing)
+1.0.0 : exe형식으로 생성
 
 ## 사용방법
 ![기사 크롤링 사용방법](https://github.com/user-attachments/assets/8b8564cd-ebce-4508-b9f4-60be60a6fe93)
